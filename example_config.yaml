@@ -1,0 +1,38 @@
+# GitHub API configuration
+github:
+  token: "your_github_token_here"
+  base_url: "https://api.github.com"
+  rate_limit:
+    enabled: true
+    max_requests_per_hour: 5000
+
+# Logging configuration
+logging:
+  log_file: "logs/crawler.log"
+  log_level: "INFO"
+
+# File handling configuration
+files:
+  download_directory: "data/downloaded_files"
+  supported_extensions:
+    - ".md"
+    - ".json"
+    - ".pdf"
+    - ".mediawiki"
+
+# Repositories configuration
+repositories:
+  to_skip:
+    - "repo1"
+    - "repo2"
+
+# Metadata configuration
+metadata:
+  output_directory: "data"
+  file_name_prefix: "complete_metadata"
+  timestamp_format: "%Y%m%d_%H%M%S"
+
+# Users and organizations to crawl
+crawl_targets:
+  - "dane-git"
+  - "github"
