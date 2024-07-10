@@ -12,7 +12,7 @@ The GitHub Crawler is a Python script designed to fetch and process repository d
 
 - Handle GitHub API rate limiting.
 - Log detailed messages with timestamps, file names, function names, and line numbers.
-- Save metadata with a unique timestamp.
+- Save metadata to a single file.  Goal to prevent duplicate api calls.
 
 ## Prerequisites
 
@@ -69,16 +69,10 @@ save_metadata()
 
 print('Crawling completed.')
 ```
-## In Development
-This project is currently in development. Future updates, should they exist, will include enhancements to the existing features, as well as the addition of new capabilities.
 
-## TODO
-- [ ] Write test scripts
-- [ ] Clean up passing all the config data around for logging.
-- [ ] Improve error handling and logging.
-- [ ] change metadata to database. don't grab whats already been fetch, unless is new version.
-- [ ] Add support for more file formats. Look into better and more consistent conversion. Is this necessary? Langchain??
-- [ ] Optimize the rate limiting and request handling logic.
-- [ ] Add unit tests for individual functions.
-- [ ] Create a more robust configuration system for user inputs.
-- [ ] Enhance the documentation with more detailed examples.
+
+## Documentation
+
+- [TODO](TODO.md)
+- [Notes](NOTES.md)
+- [Scope](SCOPE.md)

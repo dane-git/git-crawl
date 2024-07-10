@@ -25,12 +25,13 @@ repositories:
   to_skip:
     - "repo1"
     - "repo2"
+  only_include:
+    - "saadpasta::developerFolio" # if this exists it overrides everything right now.
 
 # Metadata configuration
 metadata:
-  output_directory: "data"
-  file_name_prefix: "complete_metadata"
-  timestamp_format: "%Y%m%d_%H%M%S"
+  file_name: "metadata.json"
+  timestamp_format: "%m-%d-%Y %H:%M:%S"
 
 # Users and organizations to crawl
 crawl_targets:

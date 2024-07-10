@@ -1,7 +1,7 @@
 import yaml
 from utils.github_api import fetch_repositories
 from utils.log import log_message
-from utils.file_handler import save_metadata, get_run_start_time
+from utils.file_handler import save_metadata, get_run_start_time, load_metadata
 
 def load_config(config_file='config/config.yaml'):
     with open(config_file, 'r') as file:
@@ -11,17 +11,15 @@ def load_config(config_file='config/config.yaml'):
 def main():
     config = load_config()
     start_time = get_run_start_time(config)
-    # print('config', config)
-    print('start_time', start_time)
-    # Log the start of the crawling process
+    metadata = load_metadata(config['metadata']['file_name'])
     log_message(f'Starting crawling process: start_time: {start_time}', config['logging']['log_file'])
     
     # Fetch repositories and their details for each starting point
     for starting_point in config['crawl_targets']:
-        fetch_repositories(starting_point, start_time, config)
+        fetch_repositories(starting_point,  config, metadata)
     
     # Save final metadata
-    save_metadata(config['metadata'], start_time, config)
+    save_metadata(metadata, config)
     
     # Log the completion of the crawling process
     log_message('Crawling completed', config['logging']['log_file'])

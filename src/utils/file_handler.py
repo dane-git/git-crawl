@@ -12,7 +12,20 @@ from utils.log import log_message
 def get_run_start_time (config):
     return datetime.datetime.now().strftime(config['metadata']['timestamp_format'])
     
-def download_file(url, path, is_pdf, is_mediawiki, config):
+def load_metadata(metadata_file='metadata.json'):
+    if os.path.exists(metadata_file):
+        with open(metadata_file, 'r') as file:
+            return json.load(file)
+    else:
+        return {
+            "repositories": {},
+            "users": {},
+            "organizations": {},
+            "files": {},
+            "commits": {}
+        }
+
+def download_file(url, path, is_pdf, is_mediawiki,config):
     response = requests.get(url)
     os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
     with open(path, 'wb') as file:
@@ -47,11 +60,8 @@ def convert_mediawiki_to_markdown(mediawiki_path, config):
         md_file.write(markdown_text)
     log_message(f"Converted {mediawiki_path} to Markdown and saved as {output_path}", config['logging']['log_file'])
 
-def save_metadata(metadata, start_time, config):
-    file_name = os.path.join(config['metadata']['output_directory'], f"{config['metadata']['file_name_prefix']}_{start_time}.json")
-    log_message(f'Saving metadata to {file_name}...', config['logging']['log_file'])
-    if not os.path.exists(config['metadata']['output_directory']):
-        os.makedirs(config['metadata']['output_directory'])
-    with open(file_name, 'w', encoding='utf-8') as file:
-        json.dump(metadata, file, indent=4)
-    log_message('Metadata saved.',  config['logging']['log_file'])
+def save_metadata(metadata,  config):
+    # file_name = os.path.join(config['metadata']['output_directory'], f"{config['metadata']['file_name_prefix']}_{start_time}.json")
+    log_message(f'Saving metadata', config['logging']['log_file'])
+    with open(config['metadata']['file_name'], 'w', encoding='utf-8') as file:
+        json.dump(metadata, file, indent=2)

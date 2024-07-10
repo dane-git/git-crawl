@@ -9,3 +9,4 @@ build/
 config/
 *.egg-info/
 logs/
+metadata.json
