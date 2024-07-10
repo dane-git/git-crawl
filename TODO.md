@@ -4,6 +4,9 @@
 This project is currently in development. Future updates, should they exist, will include enhancements to the existing features, as well as the addition of new capabilities.
 
 ## Top Priority
+- added sha to file name to detect diff in files.  Make sure this correlates to some actual file difference and not some repo / tree diff.
+  - [ ] compare sha's in gh to blob contents sha to ensure actual file differences are being saved.
+  
 - [ ] Improve error handling and logging.
 - [ ] Add unit tests for individual functions.
 

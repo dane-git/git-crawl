@@ -118,20 +118,20 @@ def fetch_repositories(user_or_org, config, metadata):
                 continue
             repo_owner = repo['owner']['login']
             log_message(f'Fetching repo: {repo_owner}/{repo_name}', config['logging']['log_file'])
-
-            repo_info = get_repo_info(repo_id, repo, config, metadata)#, depth=1)
+            repo_url = f"{config['github']['base_url']}/repos/{repo['owner']['login']}/{repo['name']}"
+            repo_info = get_repo_info(repo_id, repo_url, config, metadata, depth=0)
             metadata['repositories'][str(repo_id)] = repo_info
         page += 1 
 
-def get_repo_info(repo_id, repo, config, metadata):
-    repo_url = f"{config['github']['base_url']}/repos/{repo['owner']['login']}/{repo['name']}"
+def get_repo_info(repo_id, repo_url, config, metadata, depth):
+    # repo_url = f"{config['github']['base_url']}/repos/{repo['owner']['login']}/{repo['name']}"
     headers = {'Authorization': f"token {config['github']['token']}"}
     repo_data = fetch_url(repo_url, headers, config['logging']['log_file'])
     if repo_data is None:
         return None
     
     owner_id = repo_data['owner']['id']
-    if repo_data['owner']['type'] == 'User':
+    if repo_data['owner']['type'] == 'User' and config['repositories']['get_user_data']:
         if str(owner_id) not in metadata['users']:
             fetch_user_data(repo_data['owner']['login'], config, metadata)
     else:
@@ -164,17 +164,19 @@ def get_repo_info(repo_id, repo, config, metadata):
         'forks': [],
         'commits': [],
         'tags': [],
-        'topics': repo_data.get('topics', [])
+        'topics': repo_data.get('topics', []),
+        'visited': True
     }
 
     fetch_repo_details(repo_id, repo_info, config, metadata)
 
     # Fetch forks without diving into their details
-    fetch_forks(repo_info, config, metadata)
+    depth += 1
+    fetch_forks(repo_info, config, metadata, depth)
 
     return repo_info
 
-def fetch_forks(repo_info, config, metadata):
+def fetch_forks(repo_info, config, metadata, depth):
     repo_url = f"{config['github']['base_url']}/repos/{repo_info['owner']}/{repo_info['name']}/forks"
     headers = {'Authorization': f"token {config['github']['token']}"}
     page = 1
@@ -183,37 +185,49 @@ def fetch_forks(repo_info, config, metadata):
         forks = fetch_url(repo_url, headers, config['logging']['log_file'], params)
         if not forks:
             break
+        log_message(f"Processing forks for : {repo_info['owner']}/{repo_info['name']}", config['logging']['log_file'])
         for fork in forks:
             fork_id = fork['id']
             owner_id = fork['owner']['id']
-            if fork['owner']['type'] == 'User':
-                if str(owner_id) not in metadata['users']:
-                    fetch_user_data(fork['owner']['login'], config, metadata)
+            if config['repositories']['get_extended_fork_info'] and config['repositories']['get_user_data'] :
+              if fork['owner']['type'] == 'User':
+                  if str(owner_id) not in metadata['users']:
+                      fetch_user_data(fork['owner']['login'], config, metadata)
+              else:
+                  if str(owner_id) not in metadata['organizations'] and config['repositories']['get_org_data']:
+                      fetch_organization_data(fork['owner']['login'], config, metadata)
+            if config['repositories']['get_extended_fork_info'] and depth <= config['repositories']['max_fork_depth']:
+                
+                fork_url = f"{config['github']['base_url']}/repos/{fork['owner']['login']}/{fork['name']}"
+                log_message(f"Fetching extended fork information: {fork['owner']['login']}/{fork['name']}\n\tDEPTH: {depth}\n\tget_exteneded_fork_info: {config['repositories']['get_extended_fork_info'] }", config['logging']['log_file'])
+                get_repo_info(fork_id, fork_url, config, metadata, depth)
+                repo_info['forks'].append(fork_id)
             else:
-                if str(owner_id) not in metadata['organizations']:
-                    fetch_organization_data(fork['owner']['login'], config, metadata)
-
-            fork_info = {
-                'id': fork_id,
-                'name': fork['name'],
-                'owner': fork['owner']['login'],
-                'owner_id': owner_id,
-                'owner_type': fork['owner']['type'],
-                'updated_at': fork['updated_at'],
-                'parent_id': repo_info['id'],
-                'clone_url': fork['clone_url'],
-                'created_at': fork['created_at'],
-                'description': fork['description'],
-                'html_url': fork['html_url'],
-                'homepage': fork['homepage'],
-                'branches': [],
-                'forks': [],
-                'commits': [],
-                'tags': [],
-                'topics': fork.get('topics', [])
-            }
-            repo_info['forks'].append(fork_id)
-            metadata['repositories'][str(fork_id)] = fork_info
+              log_message(f"Fetching BASIC fork information: {fork['owner']['login']}/{fork['name']}\n\tDEPTH: {depth}", config['logging']['log_file'])
+              fork_info = {
+                  'id': fork_id,
+                  'name': fork['name'],
+                  'owner': fork['owner']['login'],
+                  'owner_id': owner_id,
+                  'owner_type': fork['owner']['type'],
+                  'updated_at': fork['updated_at'],
+                  'parent_id': repo_info['id'],
+                  'clone_url': fork['clone_url'],
+                  'created_at': fork['created_at'],
+                  'description': fork['description'],
+                  'html_url': fork['html_url'],
+                  'homepage': fork['homepage'],
+                  'branches': [],
+                  'forks': [],
+                  'commits': [],
+                  'tags': [],
+                  'topics': fork.get('topics', []),
+                  'visited': False
+                  
+              }
+              repo_info['forks'].append(fork_id)
+              metadata['repositories'][str(fork_id)] = fork_info
+            
         page += 1
 
 
@@ -249,7 +263,7 @@ def fetch_repo_details(repo_id, repo_info, config, metadata):
                     'url': commit['html_url'],
                     'date': commit['commit']['author']['date']
                 }
-                if author_id and str(author_id) not in metadata['users']:
+                if author_id and str(author_id) not in metadata['users'] and config['repositories']['get_user_data']:
                     fetch_user_data(commit['author']['login'], config, metadata)
 
     # Fetch and save file contents
@@ -270,12 +284,14 @@ def fetch_contents(url, repo_info, config, metadata):
                 log_message(f'File {item["path"]} already processed, skipping.', config['logging']['log_file'])
                 continue
             
-            file_name = f"{repo_info['name'].replace(' ', '_')}__{item['path'].replace('/', '__')}"
+            base_name = f"{repo_info['name'].replace(' ', '_')}__{item['path'].replace('/', '__')}"
+            file_name = f"{file_sha}__{base_name}"
             file_path = os.path.join(config['files']['download_directory'], file_name)
             download_file(item['download_url'], file_path, item['name'].endswith('.pdf'), item['name'].endswith('.mediawiki'), config)
             metadata['files'][file_sha] = {
                 'repository_id': repo_info['id'],
                 'save_name': file_name,
+                'base_name': base_name,
                 'owner': repo_info['owner'],
                 'url': item['html_url'],
                 'blob': item['git_url'],

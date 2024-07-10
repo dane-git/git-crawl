@@ -10,3 +10,5 @@ config/
 *.egg-info/
 logs/
 metadata.json
+scratch*
+metadata*.json
