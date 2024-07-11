@@ -26,7 +26,11 @@ repositories:
     - "repo1"
     - "repo2"
   only_include:
-    - "saadpasta::developerFolio" # if this exists it overrides everything right now.
+    - "nikku::didi"
+  get_extended_fork_info: true
+  get_user_data: true
+  get_org_data: true
+  max_fork_depth: 1
 
 # Metadata configuration
 metadata:
@@ -35,5 +39,6 @@ metadata:
 
 # Users and organizations to crawl
 crawl_targets:
-  - "dane-git"
-  - "github"
+  - "nikku"
+  # - "dane-git"
+  #- "github"

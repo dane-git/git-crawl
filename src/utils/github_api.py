@@ -89,6 +89,10 @@ def fetch_repositories(user_or_org, config, metadata):
                 if '::' in i:
                     if i.split('::')[0] == owner:
                         _list.append(i.split('::')[1])
+
+                    ## this is dumb. fix this.
+                    else:
+                        _list.append(i)
                 else:
                     _list.append(i)
             print(106)
@@ -200,7 +204,8 @@ def fetch_forks(repo_info, config, metadata, depth):
                 
                 fork_url = f"{config['github']['base_url']}/repos/{fork['owner']['login']}/{fork['name']}"
                 log_message(f"Fetching extended fork information: {fork['owner']['login']}/{fork['name']}\n\tDEPTH: {depth}\n\tget_exteneded_fork_info: {config['repositories']['get_extended_fork_info'] }", config['logging']['log_file'])
-                get_repo_info(fork_id, fork_url, config, metadata, depth)
+                fork_info = get_repo_info(fork_id, fork_url, config, metadata, depth)
+                metadata['repositories'][str(fork_id)] = fork_info
                 repo_info['forks'].append(fork_id)
             else:
               log_message(f"Fetching BASIC fork information: {fork['owner']['login']}/{fork['name']}\n\tDEPTH: {depth}", config['logging']['log_file'])
@@ -281,7 +286,9 @@ def fetch_contents(url, repo_info, config, metadata):
         if item['type'] == 'file' and item['name'].endswith(tuple(config['files']['supported_extensions'])):
             file_sha = item['sha']
             if file_sha in metadata['files']:
-                log_message(f'File {item["path"]} already processed, skipping.', config['logging']['log_file'])
+                log_message(f'File {item["path"]} already processed, skipping Downloading. adding to repos list', config['logging']['log_file'])
+                if repo_info['id'] not in metadata['files'][file_sha]['repositories']:
+                    metadata['files'][file_sha]['repositories'].append(repo_info['id'])
                 continue
             
             base_name = f"{repo_info['name'].replace(' ', '_')}__{item['path'].replace('/', '__')}"
@@ -298,7 +305,8 @@ def fetch_contents(url, repo_info, config, metadata):
                 'name': item['name'],
                 'path': item['path'],
                 'sha': file_sha,
-                'size': item['size']
+                'size': item['size'],
+                'repositories': [repo_info['id']]
             }
         elif item['type'] == 'dir':
             fetch_contents(item['url'], repo_info, config, metadata)
