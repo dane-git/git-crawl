@@ -5,8 +5,10 @@ This project is currently in development. Future updates, should they exist, wil
 
 ## Top Priority
 - added sha to file name to detect diff in files.  Make sure this correlates to some actual file difference and not some repo / tree diff.
-  - [ ] compare sha's in gh to blob contents sha to ensure actual file differences are being saved.
+  - [X] compare sha's in gh to blob contents sha to ensure actual file differences are being saved.
   
+- [ ] add file ignore list to config: `["package-lock.json"]`.
+- [ ] Identify and add other typical contextual adding file types.
 - [ ] Improve error handling and logging.
 - [ ] Add unit tests for individual functions.
 

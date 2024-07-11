@@ -32,7 +32,6 @@ pip install .
 #### mac os
 ```sh
 brew install pandoc
-
 ```
 
 #### ubuntu/debian
@@ -45,8 +44,8 @@ sudo apt-get install pandoc
 1. Set up your GitHub personal access token:
 Replace your_github_token_here with your actual GitHub personal access token in the script.
 
-2. Specify Repositories to Skip:
-Add the repository names you want to skip to the repos_to_skip list.
+2. Specify Repositories configuration in `config/config.yaml`.   
+See `example_config.yaml`.  
 
 3. Run the Script:
 Run the script to fetch and process repository data from the specified users and organizations.
@@ -55,20 +54,6 @@ Run the script to fetch and process repository data from the specified users and
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
 
-## Example 
-```py
-# List of users and organizations
-starting_points = ['dane-git', 'github']
-
-# Fetch repositories and their details for each starting point
-for starting_point in starting_points:
-    fetch_repositories(starting_point)
-    
-# Save final metadata
-save_metadata()
-
-print('Crawling completed.')
-```
 
 
 ## Documentation
